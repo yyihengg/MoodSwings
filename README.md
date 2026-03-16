@@ -14,7 +14,7 @@ A Spotify-connected web app that tags your music by mood and intensity, then use
 - **Replay by mood** — play back your tagged tracks, filtered to the closest intensity match
 - **Discover new music** — genre-weighted recommendation engine finds new tracks based on your taste profile
 - **Playlist management** — create mood playlists and sort them by intensity, ascending or descending
-- **Device switching** — send playback to your Mobile or Computer via the Spotify Web API
+- **Device switching** — send playback to your mobile or computer via the Spotify Web API
 
 ---
 
