@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MoodSwings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:        #08080f;
+      --surface:   #111118;
+      --surface2:  #1a1a24;
+      --surface3:  #22222f;
+      --border:    rgba(255,255,255,0.07);
+      --border2:   rgba(255,255,255,0.12);
+      --accent:    #1db954;
+      --accent-dim:rgba(29,185,84,0.15);
+      --danger:    #e8545a;
+      --danger-dim:rgba(232,84,90,0.12);
+      --text:      #eeeef5;
+      --muted:     #62627a;
+      --muted2:    #9090a8;
+      --happiness: #f5c542;
+      --sadness:   #5b8cff;
+      --anger:     #e8545a;
+      --font-d: 'Bebas Neue', sans-serif;
+      --font-b: 'DM Sans', sans-serif;
+      --radius: 14px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      font-family: var(--font-b);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 55% 35% at 5%  15%, rgba(29,185,84,0.07)  0%, transparent 60%),
+        radial-gradient(ellipse 45% 55% at 90% 80%, rgba(91,140,255,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 35% 45% at 55% 45%, rgba(232,84,90,0.04)  0%, transparent 60%);
+    }
+
+    #root { position: relative; z-index: 1; }
+
+    /* ── Layout ── */
+    .app {
+      max-width: 440px;
+      margin: 0 auto;
+      padding: 28px 18px 48px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ── Header ── */
+    .header { margin-bottom: 8px; }
+    .logo-eyebrow { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+    .logo { font-family: var(--font-d); font-size: 52px; line-height: 1; letter-spacing: 2px;
+      background: linear-gradient(130deg, var(--accent) 0%, #6edea0 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      animation: fadeUp 0.25s ease both;
+    }
+    .card-label {
+      font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 14px;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Device buttons ── */
+    .device-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .device-btn {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-family: var(--font-b);
+      font-size: 13px; font-weight: 500; padding: 13px 10px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      gap: 7px; transition: border-color 0.18s, color 0.18s;
+    }
+    .device-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Transport ── */
+    .transport { display: flex; justify-content: center; gap: 12px; }
+    .ctrl-btn {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 50%; width: 50px; height: 50px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--text); font-size: 17px;
+      transition: border-color 0.18s, transform 0.15s;
+    }
+    .ctrl-btn:hover { border-color: var(--accent); transform: scale(1.07); }
+
+    /* ── Mode tabs ── */
+    .mode-tabs { display: flex; gap: 7px; }
+    .mode-tab {
+      flex: 1; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--muted2); font-family: var(--font-b);
+      font-size: 11px; font-weight: 500; padding: 10px 4px;
+      cursor: pointer; text-align: center; transition: all 0.18s; letter-spacing: 0.2px;
+    }
+    .mode-tab.active { background: var(--accent-dim); border-color: rgba(29,185,84,0.35); color: var(--accent); }
+
+    /* ── Playlist page tab variant ── */
+    .mode-tabs.playlist-tabs .mode-tab.active {
+      background: rgba(91,140,255,0.1); border-color: rgba(91,140,255,0.3); color: var(--sadness);
+    }
+
+    /* ── Mood selector ── */
+    .mood-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-bottom: 16px; }
+    .mood-opt input[type="radio"] { display: none; }
+    .mood-opt label {
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 11px; padding: 13px 6px; cursor: pointer;
+      transition: all 0.18s; font-size: 11px; font-weight: 500; color: var(--muted2);
+    }
+    .mood-opt label .emoji { font-size: 20px; }
+    .mood-opt.happiness input:checked + label { border-color: var(--happiness); background: rgba(245,197,66,0.1);  color: var(--happiness); }
+    .mood-opt.sadness   input:checked + label { border-color: var(--sadness);   background: rgba(91,140,255,0.1); color: var(--sadness);   }
+    .mood-opt.anger     input:checked + label { border-color: var(--anger);     background: rgba(232,84,90,0.1);  color: var(--anger);     }
+
+    /* ── Scale slider ── */
+    .scale-wrap { margin-bottom: 16px; }
+    .scale-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 9px; }
+    .scale-header .lbl { font-size: 11px; color: var(--muted); }
+    .scale-header .val { font-size: 13px; font-weight: 500; color: var(--text); }
+
+    input[type="range"] {
+      -webkit-appearance: none; width: 100%; height: 3px;
+      background: var(--surface3); border-radius: 2px; outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 16px; height: 16px;
+      background: var(--accent); border-radius: 50%; cursor: pointer;
+      box-shadow: 0 0 8px rgba(29,185,84,0.5);
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      width: 100%; padding: 13px; border-radius: 11px; border: none;
+      font-family: var(--font-b); font-weight: 500; font-size: 13px;
+      cursor: pointer; letter-spacing: 0.4px; transition: all 0.18s;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+    }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; }
+    .btn.primary  { background: var(--accent); color: #000; }
+    .btn.primary:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
+    .btn.secondary { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+    .btn.secondary:hover:not(:disabled) { border-color: var(--border2); }
+    .btn.danger   { background: var(--danger-dim); border: 1px solid rgba(232,84,90,0.28); color: var(--danger); }
+    .btn.danger:hover:not(:disabled)   { background: rgba(232,84,90,0.2); }
+    .btn.ghost    { background: transparent; border: 1px solid var(--border); color: var(--muted2); }
+    .btn.ghost:hover:not(:disabled)    { border-color: var(--border2); color: var(--text); }
+    .btn.sm { padding: 10px; font-size: 12px; }
+
+    /* ── Sort row ── */
+    .sort-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    /* ── Toast ── */
+    .toast-wrap {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      z-index: 100; display: flex; flex-direction: column; gap: 8px; align-items: center;
+      pointer-events: none;
+    }
+    .toast {
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 100px; padding: 10px 20px; font-size: 13px; font-weight: 500;
+      color: var(--text); box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+      animation: toastIn 0.2s ease both;
+      max-width: 340px; text-align: center;
+    }
+    .toast.success { border-color: rgba(29,185,84,0.4); color: var(--accent); }
+    .toast.error   { border-color: rgba(232,84,90,0.4); color: var(--danger); }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Info text ── */
+    .info { font-size: 12px; color: var(--muted); line-height: 1.6; text-align: center; margin-bottom: 14px; }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 14px; height: 14px; border: 2px solid rgba(0,0,0,0.3);
+      border-top-color: #000; border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    .btn.secondary .spinner, .btn.ghost .spinner { border-color: rgba(255,255,255,0.15); border-top-color: var(--text); }
+    .btn.danger    .spinner { border-color: rgba(232,84,90,0.2); border-top-color: var(--danger); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Footer nav ── */
+    .footer-nav { margin-top: auto; padding-top: 16px; display: flex; justify-content: center; }
+    .page-btn {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 100px; color: var(--muted2); font-family: var(--font-b);
+      font-size: 13px; font-weight: 500; padding: 10px 26px; cursor: pointer;
+      display: flex; align-items: center; gap: 7px;
+      transition: border-color 0.18s, color 0.18s;
+    }
+    .page-btn:hover { border-color: var(--border2); color: var(--text); }
+
+    /* ── Divider ── */
+    .divider { height: 1px; background: var(--border); margin: 4px 0 14px; }
+
+    /* ── Page animation ── */
+    .page { animation: fadeUp 0.3s ease both; display: contents; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useCallback, useRef } = React;
+
+// ─── API helper ───────────────────────────────────────────────────────────────
+async function api(path, body) {
+  const res = await fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return res.json();
+}
+
+// ─── Toast hook ───────────────────────────────────────────────────────────────
+function useToast() {
+  const [toasts, setToasts] = useState([]);
+  const timers = useRef({});
+
+  const push = useCallback((msg, type = "success") => {
+    const id = Date.now();
+    setToasts(t => [...t, { id, msg, type }]);
+    timers.current[id] = setTimeout(() => {
+      setToasts(t => t.filter(x => x.id !== id));
+      delete timers.current[id];
+    }, 3200);
+  }, []);
+
+  return { toasts, push };
+}
+
+// ─── Shared components ────────────────────────────────────────────────────────
+const SCALE_LABELS = ["", "Barely", "Mild", "Medium", "Strong", "Intense"];
+
+function ScaleSlider({ value, onChange }) {
+  return (
+    <div className="scale-wrap">
+      <div className="scale-header">
+        <span className="lbl">Intensity</span>
+        <span className="val">{value} — {SCALE_LABELS[value]}</span>
+      </div>
+      <input type="range" min="1" max="5" step="1"
+        value={value} onChange={e => onChange(Number(e.target.value))} />
+    </div>
+  );
+}
+
+function MoodPicker({ value, onChange }) {
+  const moods = [
+    { id: "happiness", emoji: "😄", label: "Happy"  },
+    { id: "sadness",   emoji: "😔", label: "Sad"    },
+    { id: "anger",     emoji: "😤", label: "Anger"  },
+  ];
+  return (
+    <div className="mood-row">
+      {moods.map(m => (
+        <div key={m.id} className={`mood-opt ${m.id}`}>
+          <input type="radio" id={`mp-${m.id}`} name="mood-pick"
+            checked={value === m.id} onChange={() => onChange(m.id)} />
+          <label htmlFor={`mp-${m.id}`}>
+            <span className="emoji">{m.emoji}</span>
+            {m.label}
+          </label>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Spinner() { return <div className="spinner" />; }
+
+// ─── Page 1: Player ───────────────────────────────────────────────────────────
+function PlayerPage({ onGoPlaylists, push }) {
+  const [mode, setMode]           = useState(null);
+  const [mood, setMood]           = useState("happiness");
+  const [scale, setScale]         = useState(3);
+  const [loading, setLoading]     = useState(null);
+  const [paused, setPaused]       = useState(false);
+
+  async function call(label, path, body) {
+    setLoading(label);
+    try {
+      const data = await api(path, body);
+      if (data.ok) {
+        push(label === "tag"     ? `Tagged! ✓` :
+             label === "explore" ? "Discovering tracks…" :
+             label === "replay"  ? "Playing your tagged tracks ▶" :
+             "Done ✓", "success");
+      } else {
+        push(data.error || "Something went wrong", "error");
+      }
+    } catch {
+      push("Network error", "error");
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  async function handleDevice(device) {
+    setLoading("device-" + device);
+    try {
+      const data = await api("/api/device", { device });
+      push(data.ok ? `Switched to ${device} ▶` : data.error, data.ok ? "success" : "error");
+    } catch { push("Network error", "error"); }
+    finally { setLoading(null); }
+  }
+
+  async function handleTransport(action) {
+    setLoading("transport-" + action);
+    try {
+      await api("/api/transport", { action });
+      if (action === "pause")  setPaused(true);
+      if (action === "resume") setPaused(false);
+    } catch { push("Network error", "error"); }
+    finally { setLoading(null); }
+  }
+
+  return (
+    <div className="page">
+      <div className="header">
+        <div className="logo-eyebrow">Your mood. Your music.</div>
+        <div className="logo">MoodSwings</div>
+      </div>
+
+      {/* Device */}
+      <div className="card">
+        <div className="card-label">Playback Device</div>
+        <div className="device-row">
+          {["Mobile","Computer"].map(d => (
+            <button key={d} className="device-btn"
+              disabled={loading === "device-" + d}
+              onClick={() => handleDevice(d)}>
+              {loading === "device-" + d ? <Spinner /> : (d === "Mobile" ? "📱" : "💻")}
+              {d}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Playback */}
+      <div className="card">
+        <div className="card-label">Playback</div>
+        <div className="transport">
+          <button className="ctrl-btn" title="Previous"
+            disabled={!!loading} onClick={() => handleTransport("prev")}>
+            {loading === "transport-prev" ? <Spinner /> : "⏮"}
+          </button>
+          <button className="ctrl-btn" title={paused ? "Resume" : "Pause"}
+            disabled={!!loading} onClick={() => handleTransport(paused ? "resume" : "pause")}>
+            {loading === "transport-pause" || loading === "transport-resume"
+              ? <Spinner />
+              : paused ? "▶" : "⏸"}
+          </button>
+          <button className="ctrl-btn" title="Next"
+            disabled={!!loading} onClick={() => handleTransport("next")}>
+            {loading === "transport-next" ? <Spinner /> : "⏭"}
+          </button>
+        </div>
+      </div>
+
+      {/* Mode selector */}
+      <div className="mode-tabs">
+        {[
+          { key: "tag",     label: "🏷 Tag Track"  },
+          { key: "explore", label: "🔭 Discover"   },
+          { key: "replay",  label: "▶ Replay"      },
+        ].map(t => (
+          <button key={t.key}
+            className={`mode-tab${mode === t.key ? " active" : ""}`}
+            onClick={() => setMode(mode === t.key ? null : t.key)}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tag Track */}
+      {mode === "tag" && (
+        <div className="card">
+          <div className="card-label">Tag Current Track</div>
+          <MoodPicker value={mood} onChange={setMood} />
+          <ScaleSlider value={scale} onChange={setScale} />
+          <button className="btn primary" disabled={loading === "tag"}
+            onClick={() => call("tag", "/api/record", { mood, scale })}>
+            {loading === "tag" ? <Spinner /> : "💾 Save Tag"}
+          </button>
+        </div>
+      )}
+
+      {/* Discover */}
+      {mode === "explore" && (
+        <div className="card">
+          <div className="card-label">Discover New Tracks</div>
+          <MoodPicker value={mood} onChange={setMood} />
+          <ScaleSlider value={scale} onChange={setScale} />
+          <button className="btn primary" disabled={loading === "explore"}
+            onClick={() => call("explore", "/api/explore", { mood, scale })}>
+            {loading === "explore" ? <Spinner /> : "🔭 Find Tracks"}
+          </button>
+        </div>
+      )}
+
+      {/* Replay */}
+      {mode === "replay" && (
+        <div className="card">
+          <div className="card-label">Replay Tagged Tracks</div>
+          <MoodPicker value={mood} onChange={setMood} />
+          <ScaleSlider value={scale} onChange={setScale} />
+          <button className="btn primary" disabled={loading === "replay"}
+            onClick={() => call("replay", "/api/play", { mood, scale })}>
+            {loading === "replay" ? <Spinner /> : "▶ Replay"}
+          </button>
+        </div>
+      )}
+
+      <div className="footer-nav">
+        <button className="page-btn" onClick={onGoPlaylists}>Playlists →</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Page 2: Playlists ────────────────────────────────────────────────────────
+function PlaylistPage({ onGoBack, push }) {
+  const [mode, setMode]     = useState(null);
+  const [mood, setMood]     = useState("happiness");
+  const [loading, setLoading] = useState(null);
+
+  async function call(label, path, body) {
+    setLoading(label);
+    try {
+      const data = await api(path, body);
+      push(data.ok ? "Done ✓" : (data.error || "Something went wrong"),
+           data.ok ? "success" : "error");
+    } catch { push("Network error", "error"); }
+    finally { setLoading(null); }
+  }
+
+  return (
+    <div className="page">
+      <div className="header">
+        <div className="logo-eyebrow">Manage your vibes</div>
+        <div className="logo">Playlists</div>
+      </div>
+
+      <div className="mode-tabs playlist-tabs">
+        {[
+          { key: "create", label: "➕ Create / Sync" },
+          { key: "sort",   label: "↕ Sort Order"    },
+        ].map(t => (
+          <button key={t.key}
+            className={`mode-tab${mode === t.key ? " active" : ""}`}
+            onClick={() => setMode(mode === t.key ? null : t.key)}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {mode === "create" && (
+        <div className="card">
+          <div className="card-label">Create / Update Playlist</div>
+          <MoodPicker value={mood} onChange={setMood} />
+          <p className="info">Creates one playlist per mood and syncs all tagged tracks to it.</p>
+          <button className="btn primary" disabled={loading === "create"}
+            onClick={() => call("create", "/api/playlist", { mood })}>
+            {loading === "create" ? <Spinner /> : "🎵 Sync Tracks"}
+          </button>
+        </div>
+      )}
+
+      {mode === "sort" && (
+        <div className="card">
+          <div className="card-label">Sort Playlist by Intensity</div>
+          <MoodPicker value={mood} onChange={setMood} />
+          <p className="info">Reorder tracks from lowest to highest intensity, or the reverse.</p>
+          <div className="sort-row">
+            <button className="btn secondary sm" disabled={!!loading}
+              onClick={() => call("asc", "/api/playlist/sort", { mood, reverse: false })}>
+              {loading === "asc" ? <Spinner /> : "↑ Ascending"}
+            </button>
+            <button className="btn secondary sm" disabled={!!loading}
+              onClick={() => call("desc", "/api/playlist/sort", { mood, reverse: true })}>
+              {loading === "desc" ? <Spinner /> : "↓ Descending"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Add current track */}
+      <div className="card">
+        <div className="card-label">Currently Playing</div>
+        <p className="info">
+          Add the playing track to its mood playlist.<br/>
+          Tag it first if it's not from an explore session.
+        </p>
+        <button className="btn danger" disabled={loading === "add"}
+          onClick={() => call("add", "/api/playlist/add", {})}>
+          {loading === "add" ? <Spinner /> : "➕ Add to Playlist"}
+        </button>
+      </div>
+
+      <div className="footer-nav">
+        <button className="page-btn" onClick={onGoBack}>← Back to Player</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── App root ─────────────────────────────────────────────────────────────────
+function App() {
+  const [page, setPage] = useState(1);
+  const { toasts, push } = useToast();
+
+  return (
+    <>
+      <div className="app">
+        {page === 1
+          ? <PlayerPage   onGoPlaylists={() => setPage(2)} push={push} />
+          : <PlaylistPage onGoBack={()    => setPage(1)}  push={push} />
+        }
+      </div>
+
+      <div className="toast-wrap">
+        {toasts.map(t => (
+          <div key={t.id} className={`toast ${t.type}`}>{t.msg}</div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
